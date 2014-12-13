@@ -14,10 +14,11 @@ import time
 feedparser.USER_AGENT = "Gopherfeed +https://github.com/lmaurits/gopherfeed"
 _TIME_FORMAT = "%Y-%m-%d %H:%M"
 
+
 def _build_mapline(entry, timestamp=False, feed_object=None):
     """Return one line of a Gophermap, built from one feed entry bject."""
     filetype = "h"
-    descr = entry.title.replace("\t","   ")
+    descr = entry.title.replace("\t", "   ")
     if feed_object:
         descr = "%s: %s" % (feed_object.get("title", "Untitled feed"), descr)
     if timestamp:
@@ -31,6 +32,7 @@ def _build_mapline(entry, timestamp=False, feed_object=None):
     mapline = "%s%s\tURL:%s" % (filetype, descr, entry.link)
     return mapline
 
+
 def gopherize_feed_object(feed_obj, timestamp=False, plug=True):
     """Return a gophermap string for a feed object produced by feedparser."""
     feed, entries = feed_obj.feed, feed_obj.entries
@@ -39,19 +41,21 @@ def gopherize_feed_object(feed_obj, timestamp=False, plug=True):
 
     maplines = []
     feed_title = feed.get("title", feed.get("link", "Untitled feed"))
-    feed_title = feed_title.replace("\t","    ")
+    feed_title = feed_title.replace("\t", "    ")
     maplines.append(feed_title)
     if feed.get("description", None):
-        maplines.append(feed.description.replace("\t","    "))
+        maplines.append(feed.description.replace("\t", "    "))
     maplines.append("")
-    
+
     timestamped_maplines = []
     for entry in entries:
         mapline = _build_mapline(entry, timestamp)
         if "published_parsed" in entry:
-            timestamped_maplines.append((time.mktime(entry.published_parsed), mapline))
+            timestamped_maplines.append(
+                (time.mktime(entry.published_parsed), mapline))
         elif "updated_parsed" in entry:
-            timestamped_maplines.append((time.mktime(entry.updated_parsed), mapline))
+            timestamped_maplines.append(
+                (time.mktime(entry.updated_parsed), mapline))
 
     # Entries are not guaranteed to appear in feed in chronological order,
     # so let's sort them
@@ -67,28 +71,32 @@ def gopherize_feed_object(feed_obj, timestamp=False, plug=True):
             feed_type = "Atom feed"
         else:
             feed_type = "Unknown feed type"
-        maplines.append("_"*70)
-        plug_line = "Converted from %s by Gopherfeed %s" % (feed_type, __version__)
+        maplines.append("_" * 70)
+        plug_line = "Converted from %s by Gopherfeed %s" % (
+            feed_type, __version__)
         maplines.append(plug_line.rjust(70))
 
     return "\n".join(maplines)
 
+
 def gopherize_feed(feed_url, timestamp=False, plug=True):
     """Return a gophermap string for the feed at feed_url."""
     return gopherize_feed_object(feedparser.parse(feed_url), timestamp, plug)
+
 
 def _slugify(feed):
     """Make a simple string from feed title, to use as a directory name."""
     slug = feed.title
     slug = slug.encode("ASCII", "ignore")
     for kill in """.,:;-"'\`\/""":
-        slug = slug.replace(kill,"_")
-        slug = slug.replace(" ","_")
+        slug = slug.replace(kill, "_")
+        slug = slug.replace(" ", "_")
         slug = slug.lower()
     return slug
 
+
 def build_feed_index(feed_objects, directory, header=None, hostname=None,
-        port=70, sort=None, plug=True):
+                     port=70, sort=None, plug=True):
     """
     Build a gophermap file in the specified directory, which presents an index
     for all the feeds in feed_objects.
@@ -101,9 +109,10 @@ def build_feed_index(feed_objects, directory, header=None, hostname=None,
         feed_slug = _slugify(feed)
         feed_dir = os.path.join(directory, feed_slug)
         feed_title = feed.get("title", feed.get("link", "Untitled feed"))
-        feed_title = feed_title.replace("\t","    ")
+        feed_title = feed_title.replace("\t", "    ")
         if "published_parsed" in entry:
-            mre = max([time.mktime(entry.published_parsed) for entry in entries])
+            mre = max([time.mktime(entry.published_parsed)
+                       for entry in entries])
         elif "updated_parsed" in entry:
             mre = max([time.mktime(entry.updated_parsed) for entry in entries])
         mapline = "1%s\t%s\t%s\t%d" % (feed_title, feed_dir, hostname, port)
@@ -123,11 +132,12 @@ def build_feed_index(feed_objects, directory, header=None, hostname=None,
     for decoration, mapline in decorated_maplines:
         maplines.append(mapline)
     if plug:
-        maplines.append("_"*70)
+        maplines.append("_" * 70)
         plug_line = "Converted from RSS/Atom feeds by Gopherfeed %s" % __version__
         maplines.append(plug_line.rjust(70))
 
     return "\n".join(maplines)
+
 
 def combine_feed_objects(feed_objs, max_entries=20, timestamp=False, plug=True):
     """
@@ -143,11 +153,13 @@ def combine_feed_objects(feed_objs, max_entries=20, timestamp=False, plug=True):
                 continue
             if "published_parsed" in entry:
                 mapline = _build_mapline(entry, timestamp, feed)
-                timestamped_maplines.append((time.mktime(entry.published_parsed), mapline))
+                timestamped_maplines.append(
+                    (time.mktime(entry.published_parsed), mapline))
             elif "updated_parsed" in entry:
                 mapline = _build_mapline(entry, timestamp, feed)
-                timestamped_maplines.append((time.mktime(entry.updated_parsed), mapline))
-   
+                timestamped_maplines.append(
+                    (time.mktime(entry.updated_parsed), mapline))
+
     timestamped_maplines.sort()
     timestamped_maplines.reverse()
     maplines = []
@@ -155,8 +167,8 @@ def combine_feed_objects(feed_objs, max_entries=20, timestamp=False, plug=True):
         maplines.append(mapline)
 
     if plug:
-        maplines.append("_"*70)
+        maplines.append("_" * 70)
         plug_line = "Converted from RSS/Atom feeds by Gopherfeed %s" % __version__
         maplines.append(plug_line.rjust(70))
-    
+
     return "\n".join(maplines)

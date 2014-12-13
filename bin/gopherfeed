@@ -69,30 +69,37 @@ import urllib2
 import time
 import xml
 
+
 def usage():
     """Print usage information."""
     print(__doc__)
+
 
 def _detect_timeout(feed_object):
     """Return True if a feed failed due to a timeout."""
     return "urlopen error timed out" in str(feed_object.get("bozo_exception", None))
 
+
 def _detect_error(feed_object):
     """Return True if something appears to have gone wrong in parsing a feed."""
     return not feed_object.entries
+
 
 def _express_error(feed_object, feed_url):
     """Write a message to stderr describing what went wrong with feed_object."""
     bozoex = feed_object.get("bozo_exception", None)
     if feed_object.get("status", None) not in (200, None):
-        strerror = "Error fetching feed at %s (HTTP status %d)" % (feed_url, feed_object.status)
+        strerror = "Error fetching feed at %s (HTTP status %d)" % (
+            feed_url, feed_object.status)
     elif isinstance(bozoex, urllib2.URLError):
         strerror = "Error fetching feed at %s (%s)" % (feed_url, str(bozoex))
     elif isinstance(bozoex, xml.sax._exceptions.SAXParseException):
-        strerror = "Error parsing feed at %s (are you sure this is a feed?)" % (feed_url,)
+        strerror = "Error parsing feed at %s (are you sure this is a feed?)" % (
+            feed_url,)
     else:
         strerror = "Feed at %s seems to be empty - skipping." % (feed_url,)
     sys.stderr.write(strerror + "\n")
+
 
 def gopherize_one_feed(feed_url, filename, timestamp, plug):
     """
@@ -104,17 +111,19 @@ def gopherize_one_feed(feed_url, filename, timestamp, plug):
         _express_error(feed_object, feed_url)
         exit(1)
     gophermap = gopherfeed.gopherize_feed_object(feed_object,
-            timestamp=timestamp, plug=plug)
+                                                 timestamp=timestamp, plug=plug)
     if filename:
         try:
             with codecs.open(filename, "w", "UTF-8") as fp:
                 fp.write(gophermap)
                 fp.write("\n")
         except IOError as e:
-            sys.stderr.write("Could not write gophermap to file %s: %s\n" % (filename, e.strerror))
+            sys.stderr.write(
+                "Could not write gophermap to file %s: %s\n" % (filename, e.strerror))
             exit(1)
     else:
         print(gophermap)
+
 
 def _read_feed_urls(filename):
     """Return a list of URLs read from a file, one per line."""
@@ -132,8 +141,9 @@ def _read_feed_urls(filename):
     fp.close()
     return feeds
 
+
 def gopherize_feed_file(feedfile, directory, header=None, hostname=None,
-        port=70, sort=None, timestamp=False, plug=True):
+                        port=70, sort=None, timestamp=False, plug=True):
     """
     Read a file of URLs and generate a directory structure of gophermaps.
 
@@ -147,7 +157,7 @@ def gopherize_feed_file(feedfile, directory, header=None, hostname=None,
         feed_urls = _read_feed_urls(feedfile)
     except IOError as e:
         sys.stderr.write("Could not open URL file %s: %s\n" % (feedfile,
-            e.strerror))
+                                                               e.strerror))
         exit(1)
     feed_objects = []
     for feed_url in feed_urls:
@@ -159,23 +169,25 @@ def gopherize_feed_file(feedfile, directory, header=None, hostname=None,
         gophermap_dir = os.path.join(directory, feed_slug)
         gophermap_file = os.path.join(gophermap_dir, "gophermap")
         gophermap_text = gopherfeed.gopherize_feed_object(feed_object,
-                timestamp, plug)
+                                                          timestamp, plug)
         if not os.path.exists(gophermap_dir):
             try:
                 os.makedirs(gophermap_dir)
             except OSError as e:
-                sys.stderr.write("Could not create feed directory %s: %s\n" % (gophermap_dir, e.strerror))
+                sys.stderr.write(
+                    "Could not create feed directory %s: %s\n" % (gophermap_dir, e.strerror))
                 continue
         try:
             with codecs.open(gophermap_file, "w", "UTF-8") as fp:
                 fp.write(gophermap_text)
                 fp.write("\n")
         except IOError as e:
-            sys.stderr.write("Could not write gophermap file %s: %s\n" % (gophermap_file, e.strerror))
+            sys.stderr.write(
+                "Could not write gophermap file %s: %s\n" % (gophermap_file, e.strerror))
             continue
         feed_objects.append(feed_object)
     indexmap = gopherfeed.build_feed_index(feed_objects, directory, header,
-            hostname, port, sort, plug)
+                                           hostname, port, sort, plug)
     try:
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -184,8 +196,10 @@ def gopherize_feed_file(feedfile, directory, header=None, hostname=None,
             fp.write(indexmap)
             fp.write("\n")
     except (IOError, OSError) as e:
-        sys.stderr.write("Could not write gophermap file %s: %s\n" % (os.path.join(directory, "gophermap"), e.strerror))
+        sys.stderr.write("Could not write gophermap file %s: %s\n" % (
+            os.path.join(directory, "gophermap"), e.strerror))
         exit(1)
+
 
 def combine_feed_file(feedfile, filename=None, entries=20, sort=None, timestamp=False, plug=True):
     """
@@ -196,7 +210,7 @@ def combine_feed_file(feedfile, filename=None, entries=20, sort=None, timestamp=
         feed_urls = _read_feed_urls(feedfile)
     except IOError as e:
         sys.stderr.write("Could not open URL file %s: %s\n" % (feedfile,
-            e.strerror))
+                                                               e.strerror))
         exit(1)
     feed_objects = []
     for feed_url in feed_urls:
@@ -207,7 +221,8 @@ def combine_feed_file(feedfile, filename=None, entries=20, sort=None, timestamp=
         else:
             feed_objects.append(feed_object)
 
-    gophermap = gopherfeed.combine_feed_objects(feed_objects, max_entries=entries, timestamp=timestamp, plug=plug)
+    gophermap = gopherfeed.combine_feed_objects(
+        feed_objects, max_entries=entries, timestamp=timestamp, plug=plug)
 
     if filename:
         try:
@@ -218,10 +233,12 @@ def combine_feed_file(feedfile, filename=None, entries=20, sort=None, timestamp=
                 fp.write(gophermap)
                 fp.write("\n")
         except (IOError, OSError) as e:
-            sys.stderr.write("Could not write gophermap file %s: %s\n" % (filename, e.strerror))
+            sys.stderr.write(
+                "Could not write gophermap file %s: %s\n" % (filename, e.strerror))
             exit(1)
     else:
         print(gophermap)
+
 
 def main():
     """The gopherfeed command line application."""
@@ -266,18 +283,20 @@ def main():
 
     if feedfile and directory:
         gopherize_feed_file(feedfile, directory, header=index_header,
-                hostname=hostname, port=port, sort=sort, timestamp=timestamp,
-                plug=plug)
+                            hostname=hostname, port=port, sort=sort, timestamp=timestamp,
+                            plug=plug)
     elif feedfile and not directory:
         if len(args) == 1:
-            combine_feed_file(feedfile, filename=args[0], entries=entries, sort=sort, timestamp=timestamp, plug=plug)
+            combine_feed_file(feedfile, filename=args[
+                              0], entries=entries, sort=sort, timestamp=timestamp, plug=plug)
         else:
-            combine_feed_file(feedfile, filename=None, entries=entries, sort=sort, timestamp=timestamp, plug=plug)
+            combine_feed_file(
+                feedfile, filename=None, entries=entries, sort=sort, timestamp=timestamp, plug=plug)
     elif not feedfile and not directory and len(args) in (1, 2):
         feed_url = args[0]
         if len(args) == 2:
             gopherize_one_feed(feed_url, args[1], timestamp=timestamp,
-                    plug=plug)
+                               plug=plug)
         else:
             gopherize_one_feed(feed_url, None, timestamp=timestamp, plug=plug)
     else:

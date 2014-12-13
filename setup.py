@@ -19,8 +19,8 @@ setup(
         'Programming Language :: Python',
         'License :: OSI Approved :: BSD License',
     ],
-    scripts=['bin/gopherfeed',],
-    py_modules=['gopherfeed',],
+    scripts=['bin/gopherfeed', ],
+    py_modules=['gopherfeed', ],
     requires=['feedparser'],
     install_requires=['feedparser']
 )
